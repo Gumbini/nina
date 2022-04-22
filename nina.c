@@ -1,10 +1,10 @@
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #define A_WHT "\033[1;97m"
@@ -25,10 +25,16 @@ int main(int argc, char **argv) {
 		errno = EINVAL;
 		die("No filename (argv[0])");
 	}
-
-	fprintf(stderr, A_WHT "nina" A_RST " - If she was good at one thing, it was destroying...\n");
-
 	if (argc == 1) {
+
+	fprintf (stderr,
+	 A_WHT "        _               n" A_RST "on            |  Universal\n"
+	 A_WHT "       (_)              i" A_RST "nconvenient   |  data overwriting\n"
+	 A_WHT "  _ __  _ _ __   __ _   n" A_RST "uke           |  and destruction\n"
+	 A_WHT " | '_ \\| | '_ \\ / _' |  a" A_RST "pplication    |  software\n"
+	 A_WHT " | | | | | | | | (_| |  " A_RST "\n"
+	 A_WHT " |_| |_|_|_| |_|\\__,_|  " A_RST "If she was good at one thing, it was destroying...\n\n");
+
 		errno = EINVAL;
 		die("Missing argument");
 	}
@@ -43,8 +49,7 @@ int main(int argc, char **argv) {
 	if (fstat(fd, &statbuf) == -1) {
 		die("fstat");
 	}
-	fprintf(stderr, "Size: %li Bytes. Proceed to nuke the file to nirvana? [yes/*]\n",
-			statbuf.st_size);
+	fprintf(stderr, "Size: %li Bytes. Proceed to nuke the file to nirvana? [yes/*]\n", statbuf.st_size);
 
 	char input[8];
 	if (fgets(input, 8, stdin) == NULL) {
@@ -69,7 +74,8 @@ int main(int argc, char **argv) {
 	if (fsync(fd) == -1) {
 		die("fsync");
 	}
-	fprintf(stderr, "Kernel transfered all modified data to the disk device.\n");
+	fprintf(stderr, "The Kernel has confirmed that all modified data has been written "
+					"to the associated disk device.\n");
 
 	close(fd);
 	return EXIT_SUCCESS;
