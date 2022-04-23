@@ -7,14 +7,18 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define A_WHT "\033[1;97m"
 #define A_RST "\033[0m"
+
+#define A_GRN "\033[1;32m"
+#define A_RED "\033[1;31m"
+#define A_WHT "\033[1;97m"
+#define A_YLW "\033[1;33m"
 
 static void die(const char *msg) {
 	if (errno) {
-		perror(msg);
+		fprintf(stderr, A_RED "[FAIL!]" A_WHT " (%s) %s" A_RST "\n", msg, strerror(errno));
 	} else {
-		fprintf(stderr, "[no errno] %s\n", msg);
+		fprintf(stderr, A_RED "[FAIL!]" A_WHT " %s" A_RST "\n", msg);
 	}
 
 	exit(EXIT_FAILURE);
@@ -22,12 +26,12 @@ static void die(const char *msg) {
 
 int main(int argc, char **argv) {
 	fprintf (stderr,
-	 A_WHT "        _               n" A_RST "on            |  Universal\n"
-	 A_WHT "       (_)              i" A_RST "nconvenient   |  data overwriting\n"
-	 A_WHT "  _ __  _ _ __   __ _   n" A_RST "uke           |  and destruction\n"
-	 A_WHT " | '_ \\| | '_ \\ / _' |  a" A_RST "pplication    |  software\n"
-	 A_WHT " | | | | | | | | (_| |  " A_RST "\n"
-	 A_WHT " |_| |_|_|_| |_|\\__,_|  " A_RST "If she was good at one thing, it was destroying...\n\n");
+	 A_YLW "        _               n" A_RST "on            |  Universal\n"
+	 A_YLW "       (_)              i" A_RST "nconvenient   |  data overwriting\n"
+	 A_YLW "  _ __  _ _ __   ____   n" A_RST "uke           |  and destruction\n"
+	 A_YLW " | '_ \\| | '_ \\ / _  |  a" A_RST "pplication    |  software\n"
+	 A_YLW " | | | | | | | | (_| |  " A_RST "\n"
+	 A_YLW " |_| |_|_|_| |_|\\____|  " A_GRN "(c) 2022 Gumbini""\n\n");
 
 	if (argc <= 0) {
 		errno = EINVAL;
