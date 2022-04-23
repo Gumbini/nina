@@ -21,12 +21,6 @@ static void die(const char *msg) {
 }
 
 int main(int argc, char **argv) {
-	if (argc <= 0) {
-		errno = EINVAL;
-		die("No filename (argv[0])");
-	}
-	if (argc == 1) {
-
 	fprintf (stderr,
 	 A_WHT "        _               n" A_RST "on            |  Universal\n"
 	 A_WHT "       (_)              i" A_RST "nconvenient   |  data overwriting\n"
@@ -35,6 +29,11 @@ int main(int argc, char **argv) {
 	 A_WHT " | | | | | | | | (_| |  " A_RST "\n"
 	 A_WHT " |_| |_|_|_| |_|\\__,_|  " A_RST "If she was good at one thing, it was destroying...\n\n");
 
+	if (argc <= 0) {
+		errno = EINVAL;
+		die("No filename (argv[0])");
+	}
+	if (argc == 1) {
 		errno = EINVAL;
 		die("Missing argument");
 	}
