@@ -25,6 +25,8 @@ static void die(const char *msg) {
 		fprintf(stderr, A_RED "[FAIL]" A_WHT " %s" A_RST "\n", msg);
 	}
 
+	fprintf(stderr, "Use the \"--help\" switch for usage information.\n");
+
 	if (inFd != -1) {
 		close(inFd);
 	}
@@ -36,13 +38,6 @@ static void die(const char *msg) {
 }
 
 int main(int argc, char **argv) {
-	fprintf (stderr,
-	 A_YLW "        _               n" A_RST "on            |  Universal\n"
-	 A_YLW "       (_)              i" A_RST "nconvenient   |  data overwriting\n"
-	 A_YLW "  _ __  _ _ __   ____   n" A_RST "uke           |  and destruction\n"
-	 A_YLW " | '_ \\| | '_ \\ / _  |  a" A_RST "pplication    |  software\n"
-	 A_YLW " | | | | | | | | (_| |  " A_RST "\n"
-	 A_YLW " |_| |_|_|_| |_|\\____|  " A_CYN "(c) 2022 Gumbini" A_RST "\n\n");
 
 	if (argc <= 0) {
 		errno = EINVAL;
@@ -53,6 +48,22 @@ int main(int argc, char **argv) {
 		die("Missing argument");
 	}
 
+	if (strcmp(argv[1], "--help") == 0) {
+		fprintf (stderr,
+			A_YLW "        _               n" A_RST "on            |  Universal\n"
+			A_YLW "       (_)              i" A_RST "nconvenient   |  data overwriting\n"
+			A_YLW "  _ __  _ _ __   ____   n" A_RST "uke           |  and destruction\n"
+			A_YLW " | '_ \\| | '_ \\ / _  |  a" A_RST "pplication    |  software\n"
+			A_YLW " | | | | | | | | (_| |  " A_RST "\n"
+			A_YLW " |_| |_|_|_| |_|\\____|  " A_CYN "(c) 2022 Gumbini" A_RST "\n\n"
+			"This program is free software; you can redistribute it and/or\n"
+			"modify it under the terms of the GNU General Public License (Version 2.0)\n"
+			"as published by the Free Software Foundation.\n\n"
+			"Usage: %s <file path>\n", argv[0]);
+
+		return EXIT_SUCCESS;
+	}
+	
 	outFd = open(argv[1], O_WRONLY);
 	if (outFd == -1) {
 		die("open");
