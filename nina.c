@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2022 Martin Weinzierl (Gumbini)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License (Verison 2.0)
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -38,7 +55,6 @@ static void die(const char *msg) {
 }
 
 int main(int argc, char **argv) {
-
 	if (argc <= 0) {
 		errno = EINVAL;
 		die("No filename (argv[0])");
@@ -49,21 +65,22 @@ int main(int argc, char **argv) {
 	}
 
 	if (strcmp(argv[1], "--help") == 0) {
-		fprintf (stderr,
-			A_YLW "        _               n" A_RST "on            |  Universal\n"
-			A_YLW "       (_)              i" A_RST "nconvenient   |  data overwriting\n"
-			A_YLW "  _ __  _ _ __   ____   n" A_RST "uke           |  and destruction\n"
-			A_YLW " | '_ \\| | '_ \\ / _  |  a" A_RST "pplication    |  software\n"
-			A_YLW " | | | | | | | | (_| |  " A_RST "\n"
-			A_YLW " |_| |_|_|_| |_|\\____|  " A_CYN "(c) 2022 Gumbini" A_RST "\n\n"
-			"This program is free software; you can redistribute it and/or\n"
-			"modify it under the terms of the GNU General Public License (Version 2.0)\n"
-			"as published by the Free Software Foundation.\n\n"
-			"Usage: %s <file path>\n", argv[0]);
+		fprintf(stderr,
+				A_YLW "        _               n" A_RST "on            |  Universal\n" A_YLW
+					  "       (_)              i" A_RST "nconvenient   |  data overwriting\n" A_YLW
+					  "  _ __  _ _ __   ____   n" A_RST "uke           |  and destruction\n" A_YLW
+					  " | '_ \\| | '_ \\ / _  |  a" A_RST "pplication    |  software\n" A_YLW
+					  " | | | | | | | | (_| |  " A_RST "\n" A_YLW " |_| |_|_|_| |_|\\____|  " A_CYN
+					  "(c) 2022 Gumbini" A_RST "\n\n"
+					  "This program is free software; you can redistribute it and/or\n"
+					  "modify it under the terms of the GNU General Public License (Version 2.0)\n"
+					  "as published by the Free Software Foundation.\n\n"
+					  "Usage: %s <file path>\n",
+				argv[0]);
 
 		return EXIT_SUCCESS;
 	}
-	
+
 	outFd = open(argv[1], O_WRONLY);
 	if (outFd == -1) {
 		die("open");
@@ -112,10 +129,10 @@ int main(int argc, char **argv) {
 	}
 
 	for (off_t i = 0; i < statbuf.st_size; i += statbuf.st_blksize) {
-		if (read(inFd, writeBuf, statbuf.st_blksize) == -1) {
+		if (read(inFd, writeBuf, (size_t) statbuf.st_blksize) == -1) {
 			die("read");
 		}
-		if (write(outFd, writeBuf, statbuf.st_blksize) == -1) {
+		if (write(outFd, writeBuf, (size_t) statbuf.st_blksize) == -1) {
 			die("write");
 		}
 	}

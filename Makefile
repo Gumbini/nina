@@ -1,7 +1,10 @@
 CC = gcc
-CFLAGS = -std=gnu11 -Wall
+CFLAGS = -Wall -Wformat=2 -Wshadow -Wconversion -std=c11
 
-.PHONY: all
+.PHONY: all clean
 
 all:
 	$(CC) $(CFLAGS) nina.c -o nina
+
+clean:
+	rm nina
