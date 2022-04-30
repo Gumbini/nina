@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,6 +35,11 @@
 
 static int inFd  = -1;
 static int outFd = -1;
+
+static const char *path = NULL;
+
+static char method = '-';
+static bool nuke   = false;
 
 static void die(const char *msg) {
 	if (errno) {
@@ -54,34 +60,66 @@ static void die(const char *msg) {
 	exit(EXIT_FAILURE);
 }
 
-int main(int argc, char **argv) {
-	if (argc <= 0) {
+void parseArgs(int argc, char **argv) {
+	if (argc <= 0 || *argv == NULL) { // Illegal call to exec()
 		errno = EINVAL;
 		die("No filename (argv[0])");
 	}
-	if (argc == 1) {
+	if (argc == 1) { // Just the program path
 		errno = EINVAL;
 		die("Missing argument");
 	}
 
-	if (strcmp(argv[1], "--help") == 0) {
-		fprintf(stderr,
-				A_YLW "        _               n" A_RST "on            |  Universal\n" A_YLW
-					  "       (_)              i" A_RST "nconvenient   |  data overwriting\n" A_YLW
-					  "  _ __  _ _ __   ____   n" A_RST "uke           |  and destruction\n" A_YLW
-					  " | '_ \\| | '_ \\ / _  |  a" A_RST "pplication    |  software\n" A_YLW
-					  " | | | | | | | | (_| |  " A_RST "\n" A_YLW " |_| |_|_|_| |_|\\____|  " A_CYN
-					  "(c) 2022 Gumbini" A_RST "\n\n"
-					  "This program is free software; you can redistribute it and/or\n"
-					  "modify it under the terms of the GNU General Public License (Version 2.0)\n"
-					  "as published by the Free Software Foundation.\n\n"
-					  "Usage: %s <file path>\n",
-				argv[0]);
+	for (int i = 1; i < argc && argv[i] != NULL; i++) {
+		if (strncmp(argv[i], "--", 2) != 0) {
+			if (path == NULL) {
+				path = argv[i];
+				continue;
+			}
+			die("Only one path at a time...");
+		}
 
-		return EXIT_SUCCESS;
+		if (strcmp(argv[i], "--help") == 0) {
+			fprintf(stderr,
+					A_YLW "        _               n" A_RST "on            |  Universal\n" A_YLW
+						  "       (_)              i" A_RST "nconvenient   |  data overwriting\n" A_YLW
+						  "  _ __  _ _ __   ____   n" A_RST "uke           |  and destruction\n" A_YLW
+						  " | '_ \\| | '_ \\ / _  |  a" A_RST "pplication    |  software\n" A_YLW
+						  " | | | | | | | | (_| |  " A_RST "\n" A_YLW " |_| |_|_|_| |_|\\____|  " A_CYN
+						  "(c) 2022 Gumbini" A_RST "\n\n"
+						  "This program is free software; you can redistribute it and/or\n"
+						  "modify it under the terms of the GNU General Public License (Version 2.0)\n"
+						  "as published by the Free Software Foundation.\n\n"
+						  "Usage: %s <file path>\n",
+					argv[0]);
+
+			exit(EXIT_SUCCESS);
+		}
+		if (strcmp(argv[i], "--nuke") == 0) {
+			nuke = true;
+			continue;
+		}
+		if (strcmp(argv[i], "--zero") == 0) {
+			if (method == '-') {
+				method = 'z';
+				continue;
+			}
+			die("--zero: Method already specified");
+		}
+		if (strcmp(argv[i], "--random") == 0) {
+			if (method == '-') {
+				method = 'r';
+				continue;
+			}
+			die("--random: Method already specified");
+		}
 	}
+}
 
-	outFd = open(argv[1], O_WRONLY);
+int main(int argc, char **argv) {
+	parseArgs(argc, argv);
+
+	outFd = open(path, O_WRONLY);
 	if (outFd == -1) {
 		die("open");
 	}
@@ -102,27 +140,43 @@ int main(int argc, char **argv) {
 
 	fprintf(stderr, A_WHT "Proceed to nuke the file to nirvana?" A_RST " [yes/*]\n");
 
-	if (fgets(inputBuf, 8, stdin) == NULL) {
-		die("fgets");
-	}
-	inputBuf[strcspn(inputBuf, "\r\n")] = '\0';
+	if (!nuke) {
+		if (fgets(inputBuf, 8, stdin) == NULL) {
+			die("fgets");
+		}
+		inputBuf[strcspn(inputBuf, "\r\n")] = '\0';
 
-	if (strcmp(inputBuf, "yes") != 0) {
-		abort();
+		if (strcmp(inputBuf, "yes") != 0) {
+			abort();
+		}
 	}
 
-	fprintf(stderr, A_WHT "Choose method" A_RST ": [0] /dev/zero, [1] /dev/urandom\n");
-	if (fgets(inputBuf, 8, stdin) == NULL) {
-		die("fgets");
+	if (method == '-') {
+		fprintf(stderr, A_WHT "Choose method" A_RST ": [0] /dev/zero, [1] /dev/urandom\n");
+		if (fgets(inputBuf, 8, stdin) == NULL) {
+			die("fgets");
+		}
+		inputBuf[strcspn(inputBuf, "\r\n")] = '\0';
+		if (strcmp(inputBuf, "0") == 0) {
+			method = 'z';
+		} else if (strcmp(inputBuf, "1") == 0) {
+			method = 'r';
+		}
 	}
-	inputBuf[strcspn(inputBuf, "\r\n")] = '\0';
-	if (strcmp(inputBuf, "0") == 0) {
-		inFd = open("/dev/zero", O_RDONLY);
-	} else if (strcmp(inputBuf, "1") == 0) {
-		inFd = open("/dev/urandom", O_RDONLY);
-	} else {
-		abort();
+
+	const char *inputPath = NULL;
+	switch (method) {
+		case 'z':
+			inputPath = "/dev/zero";
+			break;
+		case 'r':
+			inputPath = "/dev/urandom";
+			break;
+		default:
+			abort();
 	}
+
+	inFd = open(inputPath, O_RDONLY);
 
 	if (inFd == -1) {
 		die("open");
