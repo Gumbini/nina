@@ -139,7 +139,8 @@ void parseArgs(int argc, char **argv) {
 int main(int argc, char **argv) {
 	parseArgs(argc, argv);
 
-	outFd = open(outPath, O_WRONLY);
+	// O_DSYNC: implicit call to fdatasync() after each call to write()
+	outFd = open(outPath, O_WRONLY | O_DSYNC);
 	if (outFd == -1) {
 		die("open()");
 	}
@@ -150,7 +151,8 @@ int main(int argc, char **argv) {
 	}
 
 	// Requires -D_XOPEN_SOURCE=700 compiler flag (POSIX.1-2008 macros)
-	switch (statbuf.st_mode & S_IFMT) { // S_IFMT: only consider file type
+	// S_IFMT: only consider file type
+	switch (statbuf.st_mode & S_IFMT) {
 		case S_IFREG:
 			break;
 		case S_IFCHR:
@@ -214,6 +216,8 @@ int main(int argc, char **argv) {
 	if (inFd == -1) {
 		die("open()");
 	}
+
+	fprintf(stderr, "[" A_YLW " BEGIN " A_RST "] write(): Overwrite data using synchronous I/O\n");
 
 	for (off_t i = 0; i < statbuf.st_size; i += statbuf.st_blksize) {
 		if (read(inFd, writeBuf, (size_t) statbuf.st_blksize) == -1) {
