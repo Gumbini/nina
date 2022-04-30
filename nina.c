@@ -7,7 +7,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -36,19 +36,20 @@
 static int inFd  = -1;
 static int outFd = -1;
 
-static const char *path = NULL;
+static const char *inPath  = NULL;
+static const char *outPath = NULL;
 
 static char method = '-';
 static bool nuke   = false;
 
 static void die(const char *msg) {
 	if (errno) {
-		fprintf(stderr, A_RED "[FAIL]" A_WHT " (%s) %s" A_RST "\n", msg, strerror(errno));
+		fprintf(stderr, A_RED "[FAIL]" A_WHT " (%s) %s" A_RST "\n", strerror(errno), msg);
 	} else {
 		fprintf(stderr, A_RED "[FAIL]" A_WHT " %s" A_RST "\n", msg);
 	}
 
-	fprintf(stderr, "Use the \"--help\" switch for usage information.\n");
+	fprintf(stderr, "Use the \"--help\" switch to view correct usage.\n");
 
 	if (inFd != -1) {
 		close(inFd);
@@ -61,22 +62,25 @@ static void die(const char *msg) {
 }
 
 void parseArgs(int argc, char **argv) {
-	if (argc <= 0 || *argv == NULL) { // Illegal call to exec()
+	// Illegal call to exec()
+	if (argc <= 0 || *argv == NULL) {
 		errno = EINVAL;
 		die("No filename (argv[0])");
 	}
-	if (argc == 1) { // Just the program path
+	// Just the program path
+	if (argc == 1) {
 		errno = EINVAL;
-		die("Missing argument");
+		die("Missing argument(s)");
 	}
 
 	for (int i = 1; i < argc && argv[i] != NULL; i++) {
 		if (strncmp(argv[i], "--", 2) != 0) {
-			if (path == NULL) {
-				path = argv[i];
+			if (outPath == NULL) {
+				outPath = argv[i];
 				continue;
 			}
-			die("Only one path at a time...");
+			errno = ENOTSUP;
+			die("Multiple file paths specified");
 		}
 
 		if (strcmp(argv[i], "--help") == 0) {
@@ -90,28 +94,44 @@ void parseArgs(int argc, char **argv) {
 						  "This program is free software; you can redistribute it and/or\n"
 						  "modify it under the terms of the GNU General Public License (Version 2.0)\n"
 						  "as published by the Free Software Foundation.\n\n"
-						  "Usage: %s <file path>\n",
+						  "Usage: %s <file path> [--nuke] [--zero | --random]\n",
 					argv[0]);
 
 			exit(EXIT_SUCCESS);
 		}
 		if (strcmp(argv[i], "--nuke") == 0) {
-			nuke = true;
-			continue;
+			if (!nuke) {
+				nuke = true;
+				continue;
+			}
+			errno = EINVAL;
+			die("--nuke is already present");
 		}
 		if (strcmp(argv[i], "--zero") == 0) {
-			if (method == '-') {
-				method = 'z';
-				continue;
+			switch (method) {
+				case '-':
+					method = 'z';
+					continue;
+				case 'z':
+					errno = EINVAL;
+					die("--zero is already present");
+				default:
+					errno = ENOTSUP;
+					die("--zero: an other method is already specified");
 			}
-			die("--zero: Method already specified");
 		}
 		if (strcmp(argv[i], "--random") == 0) {
-			if (method == '-') {
-				method = 'r';
-				continue;
+			switch (method) {
+				case '-':
+					method = 'r';
+					continue;
+				case 'r':
+					errno = EINVAL;
+					die("--random is already present");
+				default:
+					errno = ENOTSUP;
+					die("--random: an other method is already specified");
 			}
-			die("--random: Method already specified");
 		}
 	}
 }
@@ -119,22 +139,36 @@ void parseArgs(int argc, char **argv) {
 int main(int argc, char **argv) {
 	parseArgs(argc, argv);
 
-	outFd = open(path, O_WRONLY);
+	outFd = open(outPath, O_WRONLY);
 	if (outFd == -1) {
-		die("open");
+		die("open()");
 	}
 
 	struct stat statbuf;
 	if (fstat(outFd, &statbuf) == -1) {
-		die("fstat");
+		die("fstat()");
 	}
+
+	// Requires -D_XOPEN_SOURCE=700 compiler flag (POSIX.1-2008 macros)
+	switch (statbuf.st_mode & S_IFMT) { // S_IFMT: only consider file type
+		case S_IFREG:
+			break;
+		case S_IFCHR:
+			if (!isatty(outFd)) {
+				break;
+			}
+		default:
+			errno = ENOTSUP;
+			die("Unsupported file type");
+	}
+
 	char writeBuf[statbuf.st_blksize];
 	char inputBuf[8];
 
 	fprintf(stderr, "File: %s | ", argv[1]);
 	if (statbuf.st_size == 0) {
 		fprintf(stderr, A_RED "Size: 0 Bytes (Empty file!) " A_RST "\n");
-		die("Cannot nuke empty file!");
+		die("Cannot nuke empty file");
 	}
 	fprintf(stderr, "Size: %li Byte(s)" A_RST "\n", statbuf.st_size);
 
@@ -142,7 +176,7 @@ int main(int argc, char **argv) {
 
 	if (!nuke) {
 		if (fgets(inputBuf, 8, stdin) == NULL) {
-			die("fgets");
+			die("fgets()");
 		}
 		inputBuf[strcspn(inputBuf, "\r\n")] = '\0';
 
@@ -154,7 +188,7 @@ int main(int argc, char **argv) {
 	if (method == '-') {
 		fprintf(stderr, A_WHT "Choose method" A_RST ": [0] /dev/zero, [1] /dev/urandom\n");
 		if (fgets(inputBuf, 8, stdin) == NULL) {
-			die("fgets");
+			die("fgets()");
 		}
 		inputBuf[strcspn(inputBuf, "\r\n")] = '\0';
 		if (strcmp(inputBuf, "0") == 0) {
@@ -164,38 +198,37 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	const char *inputPath = NULL;
 	switch (method) {
 		case 'z':
-			inputPath = "/dev/zero";
+			inPath = "/dev/zero";
 			break;
 		case 'r':
-			inputPath = "/dev/urandom";
+			inPath = "/dev/urandom";
 			break;
 		default:
 			abort();
 	}
 
-	inFd = open(inputPath, O_RDONLY);
+	inFd = open(inPath, O_RDONLY);
 
 	if (inFd == -1) {
-		die("open");
+		die("open()");
 	}
 
 	for (off_t i = 0; i < statbuf.st_size; i += statbuf.st_blksize) {
 		if (read(inFd, writeBuf, (size_t) statbuf.st_blksize) == -1) {
-			die("read");
+			die("read()");
 		}
 		if (write(outFd, writeBuf, (size_t) statbuf.st_blksize) == -1) {
-			die("write");
+			die("write()");
 		}
 	}
-	fprintf(stderr, "[" A_GRN "SUCCESS" A_RST "] write: Overwrite data\n");
+	fprintf(stderr, "[" A_GRN "SUCCESS" A_RST "] write(): Overwrite data\n");
 
 	if (fsync(outFd) == -1) {
-		die("fsync");
+		die("fsync()");
 	}
-	fprintf(stderr, "[" A_GRN "SUCCESS" A_RST "] fsync: Synchronize state with storage device\n");
+	fprintf(stderr, "[" A_GRN "SUCCESS" A_RST "] fsync(): Synchronize state with storage device\n");
 
 	close(inFd);
 	close(outFd);
