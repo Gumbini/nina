@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 	parseArgs(argc, argv);
 
 	if (outPath == NULL) {
-		errno = EINVAL;
+		errno = ENOTSUP;
 		die("Missing path argument");
 	}
 
