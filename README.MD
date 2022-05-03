@@ -14,9 +14,12 @@ The **n**on **i**nconvenient **n**uke **a**pplication is a universal data overwr
 
 ## Usage
 
-The feature set is *very* limited thus the name "non inconvenient".
+The feature set is *very* limited hence the name "non inconvenient".
 
-General usage: `nina <file path>`
+General usage: `nina <file path> [--nuke] [--zero | --random]`
+
+If no options are provided, the program asks interactively for your input.
+
 
 Copyright notice: `nina --help`
 
