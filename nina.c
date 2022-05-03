@@ -174,9 +174,9 @@ int main(int argc, char **argv) {
 	}
 	fprintf(stderr, "Size: %li Byte(s)" A_RST "\n", statbuf.st_size);
 
-	fprintf(stderr, A_WHT "Proceed to nuke the file to nirvana?" A_RST " [yes/*]\n");
-
 	if (!nuke) {
+		fprintf(stderr, A_WHT "Proceed to nuke the file to nirvana?" A_RST " [yes/*]\n");
+
 		if (fgets(inputBuf, 8, stdin) == NULL) {
 			die("fgets()");
 		}
