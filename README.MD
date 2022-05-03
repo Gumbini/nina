@@ -32,6 +32,7 @@ Proceed to nuke the file to nirvana? [yes/*]
 yes
 Choose method: [0] /dev/zero, [1] /dev/urandom
 1
-[SUCCESS] write: Overwrite data
-[SUCCESS] fsync: Synchronize state with storage device
+[ BEGIN ] write(): Overwrite data using synchronous I/O
+[SUCCESS] write(): Overwrite data
+[SUCCESS] fsync(): Synchronize state with storage device
 ```
