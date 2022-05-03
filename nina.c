@@ -133,11 +133,18 @@ void parseArgs(int argc, char **argv) {
 					die("--random: an other method is already specified");
 			}
 		}
+		errno = ENOTSUP;
+		die("Invalid switch provided");
 	}
 }
 
 int main(int argc, char **argv) {
 	parseArgs(argc, argv);
+
+	if (outPath == NULL) {
+		errno = EINVAL;
+		die("Missing path argument");
+	}
 
 	// O_DSYNC: implicit call to fdatasync() after each call to write()
 	outFd = open(outPath, O_WRONLY | O_DSYNC);
