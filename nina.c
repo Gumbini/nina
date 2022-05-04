@@ -149,12 +149,12 @@ int main(int argc, char **argv) {
 	// O_DSYNC: implicit call to fdatasync() after each call to write()
 	outFd = open(outPath, O_WRONLY | O_DSYNC);
 	if (outFd == -1) {
-		die("open()");
+		die("open(2)");
 	}
 
 	struct stat statbuf;
 	if (fstat(outFd, &statbuf) == -1) {
-		die("fstat()");
+		die("fstat(2)");
 	}
 
 	// Requires -D_XOPEN_SOURCE=700 compiler flag (POSIX.1-2008 macros)
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr, A_WHT "Proceed to nuke the file to nirvana?" A_RST " [yes/*]\n");
 
 		if (fgets(inputBuf, 8, stdin) == NULL) {
-			die("fgets()");
+			die("fgets(3)");
 		}
 		inputBuf[strcspn(inputBuf, "\r\n")] = '\0';
 
@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
 	if (method == '-') {
 		fprintf(stderr, A_WHT "Choose method" A_RST ": [0] /dev/zero, [1] /dev/urandom\n");
 		if (fgets(inputBuf, 8, stdin) == NULL) {
-			die("fgets()");
+			die("fgets(3)");
 		}
 		inputBuf[strcspn(inputBuf, "\r\n")] = '\0';
 		if (strcmp(inputBuf, "0") == 0) {
@@ -221,25 +221,25 @@ int main(int argc, char **argv) {
 	inFd = open(inPath, O_RDONLY);
 
 	if (inFd == -1) {
-		die("open()");
+		die("open(2)");
 	}
 
-	fprintf(stderr, "[" A_YLW " BEGIN " A_RST "] write(): Overwrite data using synchronous I/O\n");
+	fprintf(stderr, "[" A_YLW " BEGIN " A_RST "] write(2): Overwrite data using synchronous I/O\n");
 
 	for (off_t i = 0; i < statbuf.st_size; i += statbuf.st_blksize) {
 		if (read(inFd, writeBuf, (size_t) statbuf.st_blksize) == -1) {
-			die("read()");
+			die("read(2)");
 		}
 		if (write(outFd, writeBuf, (size_t) statbuf.st_blksize) == -1) {
-			die("write()");
+			die("write(2)");
 		}
 	}
-	fprintf(stderr, "[" A_GRN "SUCCESS" A_RST "] write(): Overwrite data\n");
+	fprintf(stderr, "[" A_GRN "SUCCESS" A_RST "] write(2): Overwrite data\n");
 
 	if (fsync(outFd) == -1) {
-		die("fsync()");
+		die("fsync(2)");
 	}
-	fprintf(stderr, "[" A_GRN "SUCCESS" A_RST "] fsync(): Synchronize state with storage device\n");
+	fprintf(stderr, "[" A_GRN "SUCCESS" A_RST "] fsync(2): Synchronize state with storage device\n");
 
 	close(inFd);
 	close(outFd);
