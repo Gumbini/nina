@@ -26,6 +26,7 @@
 #include <unistd.h>
 
 #define A_RST "\033[0m"
+#define A_UDL "\033[1;4m"
 
 #define A_CYN "\033[1;36m"
 #define A_GRN "\033[1;32m"
@@ -174,15 +175,15 @@ int main(int argc, char **argv) {
 	char writeBuf[statbuf.st_blksize];
 	char inputBuf[8];
 
-	fprintf(stderr, "File: %s | ", argv[1]);
+	fprintf(stderr, "File: " A_GRN "%s" A_RST " | ", outPath);
 	if (statbuf.st_size == 0) {
 		fprintf(stderr, A_RED "Size: 0 Bytes (Empty file!) " A_RST "\n");
 		die("Cannot nuke empty file");
 	}
-	fprintf(stderr, "Size: %li Byte(s)" A_RST "\n", statbuf.st_size);
+	fprintf(stderr, "Size: " A_UDL "%li" A_RST " Byte(s)\n", statbuf.st_size);
 
 	if (!nuke) {
-		fprintf(stderr, A_WHT "Proceed to nuke the file to nirvana?" A_RST " [yes/*]\n");
+		fprintf(stderr, A_WHT "Nuke the file to nirvana?" A_RST " [yes/*]\n");
 
 		if (fgets(inputBuf, 8, stdin) == NULL) {
 			die("fgets(3)");
