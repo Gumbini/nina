@@ -28,11 +28,11 @@ Copyright notice: `nina --help`
 ```
 $ nina test
 File: test | Size: 314 Byte(s)
-Proceed to nuke the file to nirvana? [yes/*]
+Nuke the file to nirvana? [yes/*]
 yes
 Choose method: [0] /dev/zero, [1] /dev/urandom
 1
-[ BEGIN ] write(): Overwrite data using synchronous I/O
-[SUCCESS] write(): Overwrite data
-[SUCCESS] fsync(): Synchronize state with storage device
+[ BEGIN ] write(2): Overwrite data using synchronous I/O
+[SUCCESS] write(2): Overwrite data
+[SUCCESS] fsync(2): Synchronize state with storage device
 ```
