@@ -25,6 +25,19 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef _NO_COLOR_TERM
+
+#define A_RST ""
+#define A_UDL ""
+
+#define A_CYN ""
+#define A_GRN ""
+#define A_RED ""
+#define A_WHT ""
+#define A_YLW ""
+
+#else
+
 #define A_RST "\033[0m"
 #define A_UDL "\033[1;4m"
 
@@ -33,6 +46,8 @@
 #define A_RED "\033[1;31m"
 #define A_WHT "\033[1;97m"
 #define A_YLW "\033[1;33m"
+
+#endif
 
 static int inFd  = -1;
 static int outFd = -1;
@@ -45,9 +60,9 @@ static bool nuke   = false;
 
 static void die(const char *msg) {
 	if (errno) {
-		fprintf(stderr, A_RED "[FAIL]" A_WHT " (%s) %s" A_RST "\n", strerror(errno), msg);
+		fprintf(stderr, "[" A_RED "EXIT %d" A_WHT "] (%s) %s" A_RST "\n", errno, strerror(errno), msg);
 	} else {
-		fprintf(stderr, A_RED "[FAIL]" A_WHT " %s" A_RST "\n", msg);
+		fprintf(stderr, "[" A_RED "EXIT" A_WHT "] %s" A_RST "\n", msg);
 	}
 
 	fprintf(stderr, "Use the \"--help\" switch to view correct usage.\n");
@@ -148,8 +163,27 @@ int main(int argc, char **argv) {
 	}
 
 	// O_DSYNC: implicit call to fdatasync() after each call to write()
-	outFd = open(outPath, O_WRONLY | O_DSYNC);
+	// O_DIRECT: minimize cache effects, I/O directly from user-space buffers
+	//           (Linux extension, requires GNU SOURCE)
+#ifdef _GNU_SOURCE
+	outFd = open(outPath, O_WRONLY | O_DSYNC | O_DIRECT | O_NOFOLLOW);
+#else
+	outFd = open(outPath, O_WRONLY | O_DSYNC | O_NOFOLLOW);
+#endif
+
 	if (outFd == -1) {
+		if (errno == ELOOP) {
+			fprintf(stderr, "[" A_YLW "HINT" A_RST "] Have you tried nuking a " A_UDL "symbolic link" A_RST "?\n"
+							"       This feature has been disabled because symlinks cannot be nuked.\n");
+			char linkPath[128];
+			ssize_t nbytes;
+			if ((nbytes = readlink(outPath, linkPath, 128)) != -1) {
+				fprintf(stderr,
+						"       You might want to take a look at \"" A_UDL "%.*s" A_RST
+						"\". (<-- The shown path may be truncated!)\n",
+						(int) nbytes, linkPath);
+			}
+		}
 		die("open(2)");
 	}
 
@@ -158,7 +192,7 @@ int main(int argc, char **argv) {
 		die("fstat(2)");
 	}
 
-	// Requires -D_XOPEN_SOURCE=700 compiler flag (POSIX.1-2008 macros)
+	// These flags require the "_XOPEN_SOURCE 700" POSIX.1-2008 macro
 	// S_IFMT: only consider file type
 	switch (statbuf.st_mode & S_IFMT) {
 		case S_IFREG:

@@ -1,12 +1,15 @@
 CC = gcc
-CFLAGS = -Wall -Wformat=2 -Wshadow -Wconversion -std=c11 -D_XOPEN_SOURCE=700
+CFLAGS = -Wall -Wformat=2 -Wshadow -Wconversion -std=c11 -D_XOPEN_SOURCE=700 -D_GNU_SOURCE
 
-.PHONY: all clean
+.PHONY: all clean monochrome
 
 all: nina
 
 clean:
-	rm nina
+	$(RM) nina
+
+monochrome: CFLAGS += -D_NO_COLOR_TERM
+monochrome: nina
 
 nina: nina.c
-	$(CC) $(CFLAGS) nina.c -o nina
+	$(CC) $(CFLAGS) $^ -o $@
