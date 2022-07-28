@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wformat=2 -Wshadow -Wconversion -std=c11 -D_XOPEN_SOURCE=700 -D_GNU_SOURCE
+CFLAGS = -Wall -Wformat=2 -Wshadow -Wconversion -std=c11 -D_XOPEN_SOURCE=700
 
 .PHONY: all clean monochrome
 

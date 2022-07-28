@@ -163,13 +163,7 @@ int main(int argc, char **argv) {
 	}
 
 	// O_DSYNC: implicit call to fdatasync() after each call to write()
-	// O_DIRECT: minimize cache effects, I/O directly from user-space buffers
-	//           (Linux extension, requires GNU SOURCE)
-#ifdef _GNU_SOURCE
-	outFd = open(outPath, O_WRONLY | O_DSYNC | O_DIRECT | O_NOFOLLOW);
-#else
 	outFd = open(outPath, O_WRONLY | O_DSYNC | O_NOFOLLOW);
-#endif
 
 	if (outFd == -1) {
 		if (errno == ELOOP) {
