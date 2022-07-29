@@ -8,11 +8,23 @@ The **n**on **i**nconvenient **n**uke **a**pplication is a universal data overwr
 - Overwrite data with randomness (read from */dev/urandom*)
 - Kernel caching is prevented using the fsync(2) system call which synchronizes the overwritten state with the storage device immediately
 
+## Disclaimer
+
+### Use this software at your own risk!
+
+> This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY [...].
+
+This means especially:  
+**I am not responsible** if you use this program (wrongly) and thereby destroy
+important files on your system.
+
 ## Build
 
 `make`
 
 ## Usage
+
 
 The feature set is *very* limited hence the name "non inconvenient".
 
@@ -20,6 +32,7 @@ General usage: `nina <file path> [--nuke] [--zero | --random]`
 
 If no options are provided, the program asks interactively for your input.
 
+To delete all files in a directory use: `find . -type f | xargs -n 1 nina --nuke <--zero | --random>`
 
 Copyright notice: `nina --help`
 
